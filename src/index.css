@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --font-mono: "JetBrains Mono", "Courier New", Courier, monospace;
+  --font-sans: "Inter", sans-serif;
+  
+  --color-nql-bg: #000000;
+  --color-nql-panel: #000000;
+  --color-nql-border: #111111;
+  --color-nql-cyan: #ffffff;
+  --color-nql-gold: #ffffff;
+  --color-nql-violet: #ffffff;
+  --color-nql-text: #ffffff;
+  --color-nql-dim: #666666;
+  
+  --radius-nql: 0px;
+  --radius-nql-large: 0px;
+}
+
+@layer base {
+  body {
+    @apply bg-black text-white font-mono antialiased;
+    height: 100vh;
+    overflow: hidden;
+  }
+}
+
+@layer components {
+  .nql-panel {
+    @apply bg-black border-nql-border p-4 relative;
+  }
+
+  .nql-label {
+    @apply text-[8px] uppercase tracking-[0.2em] text-nql-dim mb-4 block;
+  }
+
+  .nql-terminal {
+    @apply font-mono text-[12px] leading-relaxed;
+  }
+
+  .scrollbar-nql::-webkit-scrollbar {
+    width: 2px;
+  }
+
+  .scrollbar-nql::-webkit-scrollbar-track {
+    @apply bg-black;
+  }
+
+  .scrollbar-nql::-webkit-scrollbar-thumb {
+    @apply bg-white/10;
+  }
+}
+
+.nql-grid-bg {
+  background: transparent;
+}
+
+

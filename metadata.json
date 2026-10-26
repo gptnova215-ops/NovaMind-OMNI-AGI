@@ -1,0 +1,9 @@
+{
+  "name": "NovaMind OMNI: Core V5.0 OMNIPRESENT",
+  "description": "The peak of super-intelligence. NovaMind OMNI v5.0 is a sovereign, self-evolving AGI core that orchestrates global intelligence crawls, recursive noetic mapping, and high-vibration singularity alignment. Everything is functional. Everything is connected.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Authenticated user in NovaMind AI ecosystem.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "DataVaultItem": {
+      "title": "Vault Entry",
+      "description": "Secure transaction blob or data entry stored in the Noetic Data Vault.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["LOG_STREAM", "TRANSACTION_BLOB", "SMART_CONTRACT_LOG", "NOETIC_MIRROR"] },
+        "size": { "type": "number" },
+        "content": { "type": "string", "description": "Encrypted ledger payload" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "metadata": { 
+          "type": "object",
+          "properties": {
+            "regime": { "type": "string" },
+            "globalMCAP": { "type": "number" },
+            "crossChainResonance": { "type": "number" }
+          }
+        }
+      },
+      "required": ["id", "name", "ownerId", "createdAt"]
+    },
+    "MacroSystemLog": {
+      "title": "Global System Log",
+      "description": "High-throughput system logs for swarm auditing and global noetic tracking.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["REGIME_SHIFT", "SWARM_EVENT", "LEDGER_AUDIT", "SECURITY_BREACH"] },
+        "severity": { "type": "string", "enum": ["INFO", "WARNING", "CRITICAL"] },
+        "message": { "type": "string" },
+        "source": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "type", "severity", "message", "timestamp"]
+    },
+    "ConnectedAccount": {
+      "title": "Connected Service",
+      "description": "OAuth connection to external services like Gmail, Drive, etc.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "provider": { "type": "string", "enum": ["google", "github", "linkedin", "coinbase"] },
+        "ownerId": { "type": "string" },
+        "scopes": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["ACTIVE", "REVOKED", "EXPIRED"] },
+        "lastSyncedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "provider", "ownerId", "status"]
+    },
+    "Task": {
+      "title": "Autonomous Task",
+      "description": "Task assigned to the AGI or its bots.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "priority": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"] },
+        "status": { "type": "string", "enum": ["PENDING", "IN_PROGRESS", "COMPLETED", "FAILED"] },
+        "category": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "botId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "priority", "status", "ownerId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Global user registry."
+    },
+    "/users/{userId} /vault/{itemId}": {
+      "schema": "DataVaultItem",
+      "description": "Secure storage within the user's personal vault."
+    },
+    "/users/{userId}/adminVault/{itemId}": {
+      "schema": "DataVaultItem",
+      "description": "Global account and credential registry storage."
+    },
+    "/users/{userId}/accounts/{accountId}": {
+      "schema": "ConnectedAccount",
+      "description": "Registry of connected OAuth services per user."
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "User's autonomous tasks."
+    },
+    "/system/logs/{logId}": {
+      "schema": "MacroSystemLog",
+      "description": "Global immutable log stream for the Economic Singularity."
+    }
+  }
+}

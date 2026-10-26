@@ -1,0 +1,109 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- PHASE 3: PRIMITIVE DEFINITIONS (Eight Pillars) ---
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // --- PHASE 4: DRAFTING THE "FORTRESS" RULES ---
+
+    function isVerifiedNode() { return isSignedIn() && request.auth.token.email_verified == true; }
+
+    // User Profile Rules
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.uid == userId &&
+               data.email is string &&
+               data.email.size() <= 256;
+      }
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().createdAt == request.time;
+      allow update: if isOwner(userId) && isValidUser(incoming()) && 
+                    incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'metadata']);
+    }
+
+    // Vault Rules (Encrypted Transaction Blobs)
+    match /users/{userId}/vault/{itemId} {
+      function isValidVaultItem(data) {
+        return isValidId(itemId) &&
+               data.ownerId == userId &&
+               data.name is string && data.name.size() <= 256 &&
+               data.type in ["LOG_STREAM", "TRANSACTION_BLOB", "SMART_CONTRACT_LOG", "NOETIC_MIRROR"] &&
+               data.size is number && data.size >= 0 &&
+               data.metadata is map;
+      }
+      // PII Isolation & Secure List Queries
+      allow list, get: if isOwner(userId);
+      
+      // Only verified nodes (email_verified) can commit transaction blobs
+      allow create: if isOwner(userId) && isVerifiedNode() && isValidVaultItem(incoming()) && incoming().createdAt == request.time;
+      allow update: if isOwner(userId) && isVerifiedNode() && isValidVaultItem(incoming()) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['name', 'metadata']) &&
+                    incoming().metadata.keys().hasAll(['regime', 'globalMarketCap', 'crossChainResonance']);
+      allow delete: if isOwner(userId);
+    }
+
+    // Admin Vault Rules (Credentials & Meta Logs)
+    match /users/{userId}/adminVault/{itemId} {
+      allow list, get: if isOwner(userId);
+      allow create, update, delete: if isOwner(userId);
+    }
+
+    // Connected Accounts Rules
+    match /users/{userId}/accounts/{accountId} {
+      function isValidAccount(data) {
+        return isValidId(accountId) &&
+               data.ownerId == userId &&
+               data.provider in ['google', 'github', 'linkedin', 'coinbase'] &&
+               data.status in ['ACTIVE', 'REVOKED', 'EXPIRED'];
+      }
+      allow list, get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidAccount(incoming());
+      allow update: if isOwner(userId) && isValidAccount(incoming()) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['status', 'lastSyncedAt', 'scopes']);
+      allow delete: if isOwner(userId);
+    }
+
+    // Task Rules
+    match /users/{userId}/tasks/{taskId} {
+      function isValidTask(data) {
+        return isValidId(taskId) &&
+               data.ownerId == userId &&
+               data.title is string && data.title.size() <= 256 &&
+               data.priority in ["LOW", "MEDIUM", "HIGH", "CRITICAL"] &&
+               data.status in ["PENDING", "IN_PROGRESS", "COMPLETED", "FAILED"];
+      }
+      allow list, get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidTask(incoming()) && incoming().createdAt == request.time;
+      allow update: if isOwner(userId) && isValidTask(incoming()) && 
+                    incoming().diff(existing()).affectedKeys().hasOnly(['status', 'priority', 'description', 'updatedAt']) &&
+                    incoming().updatedAt == request.time;
+      allow delete: if isOwner(userId);
+    }
+
+    // Global System Logs (Macro System Auditing)
+    match /system/logs/{logId} {
+      function isValidLog(data) {
+        return isValidId(logId) &&
+               data.id == logId &&
+               data.type in ["REGIME_SHIFT", "SWARM_EVENT", "LEDGER_AUDIT", "SECURITY_BREACH"] &&
+               data.severity in ["INFO", "WARNING", "CRITICAL"] &&
+               data.message is string && data.message.size() <= 2048;
+      }
+      // Anyone can read macro system state for swarm alignment
+      allow get, list: if isSignedIn();
+      // Only authorized swarm members (signed in) can commit logs
+      allow create: if isSignedIn() && isValidLog(incoming()) && incoming().timestamp == request.time;
+      // System logs are IMMUTABLE (Pillar 9)
+      allow update, delete: if false;
+    }
+  }
+}
